@@ -1,0 +1,43 @@
+variables:
+  HTTP_PROXY: http://ukproxy1.dunnhumby.co.uk:8080
+  NO_PROXY: 127.0.0.1,localhost,docker,dunnhumby.co.uk,dunnhumby.com
+  DOCKER_HOST: tcp://localhost:2375
+  ARTIFACTORY_DOCKER_REGISTRY: docker-dev.artifactory.dunnhumby.com
+  DOCKER_SBT: ${ARTIFACTORY_DOCKER_REGISTRY}/gdp/project-${CI_PROJECT_NAME}:$CI_PIPELINE_ID
+
+stages:
+ - prep
+ - build
+ - deploy
+
+# TODO - Build a common sbt image and deploy
+docker build:
+ stage: prep
+ tags:
+   - kubernetes
+ before_script:
+   - docker login -u $ARTIFACTORY_USER -p $ARTIFACTORY_KEY docker-dev.artifactory.dunnhumby.com
+   - docker login -u $ARTIFACTORY_USER -p $ARTIFACTORY_KEY docker.artifactory.dunnhumby.com
+ image: docker.artifactory.dunnhumby.com/base-images/docker:latest
+ services:
+   - docker:dind
+
+ script:
+   - echo "Building $DOCKER_SBT"
+   - docker build
+     --build-arg CI_PROJECT_PATH=$CI_PROJECT_PATH
+     --build-arg http_proxy=$HTTP_PROXY
+     --build-arg https_proxy=$HTTP_PROXY
+     --build-arg no_proxy=$NO_PROXY
+     -t $DOCKER_SBT .
+   - docker push $DOCKER_SBT
+
+build:
+  stage: build
+  image: $DOCKER_SBT
+  tags:
+    - kubernetes
+  script:
+    - sbt clean test
+
+# TODO - Perform SBT Release, on a given value when a release is tagged

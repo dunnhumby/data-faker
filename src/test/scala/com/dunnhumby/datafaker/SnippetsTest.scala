@@ -25,6 +25,7 @@ object SnippetsTest{
   }
 }
 
+/*
 class SnippetsTest extends WordSpec with SharedSparkSession with Checkers {
   import SnippetsTest._
   import spark.implicits._
@@ -87,3 +88,4 @@ class SnippetsTest extends WordSpec with SharedSparkSession with Checkers {
 }
 
 
+*/
