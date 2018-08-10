@@ -1,41 +1,31 @@
 package com.dunnhumby.datafaker
 
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions._
-
-object DataGenerator {
-  def apply(spark: SparkSession, database: String): DataGenerator = {
-    new DataGenerator(spark, database)
-  }
-}
+import com.dunnhumby.datafaker.schema.Schema
+import org.apache.log4j._
+import org.apache.spark.sql.{SaveMode, SparkSession}
 
 class DataGenerator(spark: SparkSession, database: String) extends Serializable {
 
-  import spark.implicits._
+  private val logger = Logger.getLogger(getClass)
+  logger.setLevel(Level.INFO)
 
-  def generateAndWriteCardDimCData(numCards: Int) {
-    val dataFrame = spark.sparkContext.range(0, numCards).map(f => CardDim.random(numCards, f)).toDF
-    dataFrame.write.mode("overwrite").saveAsTable(s"$database.${Table.cards}")
+  def generateAndWriteDataFromSchema(schema: Schema) {
+    import spark.sqlContext.implicits._
+
+    for (table <- schema.tables) {
+      logger.info(s"generating ${table.rows} rows for ${table.name}")
+
+      val dataFrame = table.columns.foldLeft(spark.sparkContext.range(0, table.rows).toDF("temp"))((a, b) => {
+        a.withColumn(b.name, b.column)
+      }).drop("temp")
+
+      logger.info(s"writing ${table.rows} rows for ${table.name}")
+
+      val partitions = table.partitions.getOrElse(List.empty[String])
+      dataFrame.write.mode(SaveMode.Overwrite).partitionBy(partitions: _*).saveAsTable(s"$database.${table.name}")
+
+      logger.info(s"${table.name} - complete")
+    }
   }
 
-  def generateAndWriteTransactionItemFctData(numCards: Int, numRecordsPerCard: Int, partitionByCol: String) {
-    val dataFrame = spark.sparkContext.range(0, numCards * numRecordsPerCard).map(f => Item.random((f / numRecordsPerCard).toInt)).toDF
-    dataFrame.write.mode("overwrite").partitionBy("date_id").saveAsTable(s"$database.${Table.transactions}")
-  }
-
-  def generateAndWriteSuppressions(identifiers: Array[(String, String, Double)], tableName: String) {
-    val table = spark.table(s"$database.$tableName")
-    val dataFrame = identifiers.map {
-      case (identifierType, column, fraction) => table.select(table.col(column).alias("identifier")).sample(withReplacement = false, fraction).withColumn("identifier_type", lit(identifierType))
-    }.reduce((d1, d2) => d1.union(d2))
-
-    dataFrame.write.mode("overwrite").saveAsTable(s"$database.${tableName}_suppressions")
-  }
-}
-
-object Table {
-  val transactions = "transaction_item_fct"
-  val cards = "card_dim_c"
-  val transaction_suppressions = s"${transactions}_suppressions"
-  val card_suppressions = s"${cards}_suppressions"
 }
