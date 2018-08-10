@@ -1,9 +1,10 @@
+
 package com.dunnhumby.datafaker
 
 import scala.io.Source
 import java.sql.{Date, Timestamp}
 import com.dunnhumby.datafaker.schema.Schema
-import net.jcazevedo.moultingyaml.{deserializationError, DefaultYamlProtocol, YamlDate, YamlFormat, YamlValue}
+import net.jcazevedo.moultingyaml.DefaultYamlProtocol
 import org.joda.time.DateTimeZone
 
 object YamlParser {
@@ -20,7 +21,10 @@ object YamlParser {
   /**
     * Provides additional formats for unsupported types in DefaultYamlProtocol
     */
+  object YamlParserProtocol extends YamlParserProtocol
   trait YamlParserProtocol extends DefaultYamlProtocol {
+
+    import net.jcazevedo.moultingyaml._
 
     implicit object TimestampFormat extends YamlFormat[Timestamp] {
       override def read(yaml: YamlValue): Timestamp = {

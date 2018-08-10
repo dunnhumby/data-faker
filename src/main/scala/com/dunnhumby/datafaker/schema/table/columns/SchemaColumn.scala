@@ -1,13 +1,13 @@
+
 package com.dunnhumby.datafaker.schema.table.columns
 
 import com.dunnhumby.datafaker.YamlParser.YamlParserProtocol
-import net.jcazevedo.moultingyaml._
 import org.apache.spark.sql.Column
 
 abstract class SchemaColumn {
   def name: String
 
-  def column: Column
+  def column(rowID: Option[Column] = None): Column
 }
 
 object SchemaColumnDataType {
@@ -35,6 +35,8 @@ object SchemaColumnProtocol extends YamlParserProtocol
   with SchemaColumnSelectionProtocol
   with SchemaColumnSequentialProtocol
   with SchemaColumnExpressionProtocol {
+
+  import net.jcazevedo.moultingyaml._
 
   implicit object SchemaColumnFormat extends YamlFormat[SchemaColumn] {
 

@@ -1,3 +1,4 @@
+
 package com.dunnhumby.datafaker.schema.table
 
 import com.dunnhumby.datafaker.YamlParser.YamlParserProtocol

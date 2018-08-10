@@ -1,3 +1,4 @@
+
 package com.dunnhumby.datafaker
 
 object ArgsParser {

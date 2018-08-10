@@ -1,26 +1,20 @@
+
 package com.dunnhumby.datafaker
 
-import com.holdenkarau.spark.testing.{LocalSparkContext, SparkContextProvider}
+import java.io.File
+import com.holdenkarau.spark.testing.LocalSparkContext
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.{EvilSparkContext, SparkContext}
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
-trait SharedSparkSession extends BeforeAndAfterAll with SparkSessionProvider {
-  self: Suite =>
 
-  val spark: SparkSession = createSparkSession
+trait SharedSparkSession {
 
-
-  override def beforeAll() {
-
-    super.beforeAll()
+  lazy val spark: SparkSession = {
+    SparkSession
+      .builder()
+      .master("local")
+      .appName("Test")
+      .getOrCreate()
   }
 
-  override def afterAll() {
-    try {
-      LocalSparkContext.stop(spark.sparkContext)
-    } finally {
-      super.afterAll()
-    }
-  }
 }

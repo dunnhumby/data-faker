@@ -1,14 +1,14 @@
+
 package com.dunnhumby.datafaker.schema.table.columns
 
-import scala.reflect.runtime.universe._
+import scala.reflect.runtime.universe.TypeTag
 import java.sql.{Date, Timestamp}
 import com.dunnhumby.datafaker.YamlParser.YamlParserProtocol
-import net.jcazevedo.moultingyaml.{deserializationError, YamlFormat, YamlString, YamlValue}
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{rand, udf}
 
 case class SchemaColumnSelection[T](override val name: String, values: List[T])(implicit tag: TypeTag[T]) extends SchemaColumn {
-  override def column: Column = {
+  override def column(rowID: Option[Column] = None): Column = {
     val intToSelectionUDF = udf((index: Int) => {
       values(index)
     })
@@ -17,7 +17,10 @@ case class SchemaColumnSelection[T](override val name: String, values: List[T])(
   }
 }
 
+object SchemaColumnSelectionProtocol extends SchemaColumnSelectionProtocol
 trait SchemaColumnSelectionProtocol extends YamlParserProtocol {
+
+  import net.jcazevedo.moultingyaml._
 
   implicit object SchemaColumnSelectionFormat extends YamlFormat[SchemaColumnSelection[_]] {
 
@@ -35,7 +38,6 @@ trait SchemaColumnSelectionProtocol extends YamlParserProtocol {
         case SchemaColumnDataType.Date => SchemaColumnSelection(name, values.convertTo[List[Date]])
         case SchemaColumnDataType.Timestamp => SchemaColumnSelection(name, values.convertTo[List[Timestamp]])
         case SchemaColumnDataType.String => SchemaColumnSelection(name, values.convertTo[List[String]])
-        case SchemaColumnDataType.Boolean => SchemaColumnSelection(name, values.convertTo[List[Boolean]])
         case _ => deserializationError(s"unsupported data_type: $dataType for ${SchemaColumnType.Selection}")
       }
 

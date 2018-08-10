@@ -1,15 +1,18 @@
+
 package com.dunnhumby.datafaker.schema.table.columns
 
 import com.dunnhumby.datafaker.YamlParser.YamlParserProtocol
-import net.jcazevedo.moultingyaml.{deserializationError, YamlFormat, YamlString, YamlValue}
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.expr
 
 case class SchemaColumnExpression(override val name: String, expression: String) extends SchemaColumn {
-  override def column: Column = expr(expression)
+  override def column(rowID: Option[Column] = None): Column = expr(expression)
 }
 
+object SchemaColumnExpressionProtocol extends SchemaColumnExpressionProtocol
 trait SchemaColumnExpressionProtocol extends YamlParserProtocol {
+
+  import net.jcazevedo.moultingyaml._
 
   implicit object SchemaColumnExpressionFormat extends YamlFormat[SchemaColumnExpression] {
 

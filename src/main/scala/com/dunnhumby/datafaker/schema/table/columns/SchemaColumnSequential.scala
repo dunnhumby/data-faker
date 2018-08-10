@@ -1,31 +1,43 @@
+
 package com.dunnhumby.datafaker.schema.table.columns
 
 import java.sql.{Date, Timestamp}
 import com.dunnhumby.datafaker.YamlParser.YamlParserProtocol
-import net.jcazevedo.moultingyaml.{deserializationError, YamlFormat, YamlString, YamlValue}
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.functions._
+import org.apache.spark.sql.functions.{to_utc_timestamp, from_unixtime, monotonically_increasing_id, to_date}
 
 trait SchemaColumnSequential[T] extends SchemaColumn
 
-case class SchemaColumnSequentialNumeric[T: Numeric](override val name: String, start: T, step: T) extends SchemaColumnSequential[T] {
-  override def column: Column = (monotonically_increasing_id * step) + start
+object SchemaColumnSequential {
+  def apply(name: String, start: Int, step: Int): SchemaColumn = SchemaColumnSequentialNumeric(name, start, step)
+  def apply(name: String, start: Long, step: Long): SchemaColumn = SchemaColumnSequentialNumeric(name, start, step)
+  def apply(name: String, start: Float, step: Float): SchemaColumn = SchemaColumnSequentialNumeric(name, start, step)
+  def apply(name: String, start: Double, step: Double): SchemaColumn = SchemaColumnSequentialNumeric(name, start, step)
+  def apply(name: String, start: Date, step: Int): SchemaColumn = SchemaColumnSequentialDate(name, start, step)
+  def apply(name: String, start: Timestamp, step: Int): SchemaColumn = SchemaColumnSequentialTimestamp(name, start, step)
 }
 
-case class SchemaColumnSequentialTimestamp(override val name: String, start: Timestamp, stepSeconds: Int) extends SchemaColumnSequential[Timestamp] {
-  override def column: Column = {
+private case class SchemaColumnSequentialNumeric[T: Numeric](override val name: String, start: T, step: T) extends SchemaColumnSequential[T] {
+  override def column(rowID: Option[Column] = Some(monotonically_increasing_id)): Column = (rowID.get * step) + start
+}
+
+private case class SchemaColumnSequentialTimestamp(override val name: String, start: Timestamp, stepSeconds: Int) extends SchemaColumnSequential[Timestamp] {
+  override def column(rowID: Option[Column] = Some(monotonically_increasing_id)): Column = {
     val startTime = start.getTime / 1000
-    to_utc_timestamp(from_unixtime(monotonically_increasing_id() * stepSeconds + startTime), "UTC")
+    to_utc_timestamp(from_unixtime(rowID.get * stepSeconds + startTime), "UTC")
   }
 }
 
-case class SchemaColumnSequentialDate(override val name: String, start: Date, stepDays: Int) extends SchemaColumnSequential[Date] {
+private case class SchemaColumnSequentialDate(override val name: String, start: Date, stepDays: Int) extends SchemaColumnSequential[Date] {
   val timestamp = SchemaColumnSequentialTimestamp(name, new Timestamp(start.getTime), stepDays * 86400)
 
-  override def column: Column = timestamp.column
+  override def column(rowID: Option[Column]): Column = to_date(timestamp.column())
 }
 
+object SchemaColumnSequentialProtocol extends SchemaColumnSequentialProtocol
 trait SchemaColumnSequentialProtocol extends YamlParserProtocol {
+
+  import net.jcazevedo.moultingyaml._
 
   implicit object SchemaColumnSequentialFormat extends YamlFormat[SchemaColumnSequential[_]] {
 

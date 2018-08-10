@@ -9,7 +9,6 @@ scalaVersion := "2.11.12"
 
 //publishTo := Some("Artifactory Realm" at "https://artifactory.dunnhumby.com/artifactory/libs-release-local")
 
-
 publishTo := {
   val artif = "https://artifactory.dunnhumby.com/artifactory/"
   if (isSnapshot.value)
@@ -31,7 +30,7 @@ artifact in (Compile, assembly) := {
 addArtifact(artifact in (Compile, assembly), assembly)
 
 //Only run tests single threaded.
-//concurrentRestrictions in Global += Tags.limit(Tags.Test, 1)
+concurrentRestrictions in Global += Tags.limit(Tags.Test, 1)
 
 //Skip tests in assembly as they are run elsewhere.
 test in assembly := {}
@@ -44,6 +43,8 @@ assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
   case x => MergeStrategy.first
 }
+
+fork in run := true
 
 mainClass in assembly := Some("com.dunnhumby.datafaker.Application")
 
