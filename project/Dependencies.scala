@@ -8,13 +8,13 @@ object Dependencies {
   }
 
   val deps = Seq(
-    "org.apache.spark" %% "spark-core" % Version.spark,
-    "org.scalatest" %% "scalatest" % Version.scalaTest,
-    "org.apache.spark" %% "spark-hive" % Version.spark,
-    "org.apache.spark" %% "spark-mllib" % Version.spark,
-    "org.apache.spark" %% "spark-sql" % Version.spark,
-    "org.scalamock" %% "scalamock" % "4.1.0",
-    "com.holdenkarau" %% "spark-testing-base" % "2.2.0_0.8.0" % "test",
+    "org.apache.spark" %% "spark-core" % Version.spark % Provided,
+    "org.apache.spark" %% "spark-hive" % Version.spark % Provided,
+    "org.apache.spark" %% "spark-mllib" % Version.spark % Provided,
+    "org.apache.spark" %% "spark-sql" % Version.spark % Provided,
+    "org.scalatest" %% "scalatest" % Version.scalaTest % Test,
+    "org.scalamock" %% "scalamock" % "4.1.0" % Test,
+    "com.holdenkarau" %% "spark-testing-base" % "2.2.0_0.8.0" % Test,
     "ch.qos.logback" % "logback-core" % "1.2.3",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.8.0",
