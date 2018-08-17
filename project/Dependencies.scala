@@ -14,7 +14,7 @@ object Dependencies {
     "org.apache.spark" %% "spark-sql" % Version.spark % Provided,
     "org.scalatest" %% "scalatest" % Version.scalaTest % Test,
     "org.scalamock" %% "scalamock" % "4.1.0" % Test,
-    "com.holdenkarau" %% "spark-testing-base" % "2.2.0_0.8.0" % Test,
+    "com.holdenkarau" %% "spark-testing-base" % s"${Version.spark}_0.8.0" % Test,
     "ch.qos.logback" % "logback-core" % "1.2.3",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.8.0",
