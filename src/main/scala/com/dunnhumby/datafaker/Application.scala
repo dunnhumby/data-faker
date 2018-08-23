@@ -10,15 +10,13 @@ object Application extends App {
 
   val parsedArgs = ArgsParser.validateArgs(ArgsParser.parseArgs(args.toList))
   val conf = new SparkConf()
-    .set("hive.exec.dynamic.partition", "true")
-    .set("hive.exec.dynamic.partition.mode", "nonstrict")
     .set("spark.ui.showConsoleProgress", "true")
     .setAppName("data-faker")
   val spark: SparkSession = SparkSession
-                            .builder()
-                            .config(conf)
-                            .enableHiveSupport()
-                            .getOrCreate()
+    .builder()
+    .config(conf)
+    .enableHiveSupport()
+    .getOrCreate()
 
   spark.sparkContext.setLogLevel("OFF")
 
