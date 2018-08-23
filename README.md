@@ -166,6 +166,13 @@ Note:
 - **hadoop-hive.env** is located in the **docker-hadoop-spark-workbench** directory
 - Mount the directory containing the **example.yaml** and **datafaker.jar** to app
 
+
+#### Execute locally:
+
+```
+spark-submit --master local datafaker-assembly-0.1-SNAPSHOT.jar --database test --file example.yaml 
+```
+
 ###  Column Types
 
 #### - Fixed
