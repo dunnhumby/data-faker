@@ -4,7 +4,7 @@
 
 **A Scala Application for Generating Fake Datasets with Spark**
 
-**The tool can generate any format given a provided schema, for example generate cards, transaction, and suppression data.**
+**The tool can generate any format given a provided schema, for example generate customers, transactions, and products.**
 
 The application requires a **yaml file** specifying the schema of tables to be generated.
 
@@ -19,156 +19,100 @@ Submit the jar artifact to a spark cluster with hive enabled, with the following
 
 ``` yaml
 tables:
-- name: card_dim_c
+- name: customers
   rows: 10
   columns:
-  - name: card_id
+  - name: customer_id
     data_type: Int
     column_type: Sequential
     start: 0
     step: 1
-  - name: card_code
+  - name: customer_code
     column_type: Expression
-    expression: concat('0000000000', card_id)
-  - name: hshd_id
-    data_type: Int
-    column_type: Sequential
-    start: 0
-    step: 1
-  - name: hshd_code
-    column_type: Expression
-    expression: concat('0000000000', hshd_id)
-  - name: prsn_id
-    data_type: Int
-    column_type: Sequential
-    start: 0
-    step: 1
-  - name: prsn_code
-    column_type: Expression
-    expression: concat('0000000000', prsn_id)
-  - name: hshd_isba_market_code
-    column_type: Expression
-    expression: concat('isba', hshd_code)
+    expression: concat('0000000000', customer_id)
 
-- name: transaction_item_fct_data
+- name: products
+  rows: 200
+  columns:
+  - name: product_id
+    data_type: Int
+    column_type: Sequential
+    start: 0
+    step: 1
+  - name: product_code
+    column_type: Expression
+    expression: concat('0000000000', product_id)
+
+- name: transactions
   rows: 100
   columns:
-  - name: card_id
+  - name: customer_id
     data_type: Int
     column_type: Random
     min: 0
-    max: 10 # number of cards generated
-  - name: prod_id
+    max: 10 # number of customers generated
+  - name: product_id
     data_type: Int
     column_type: Random
     min: 0
-    max: 1000
-  - name: store_id
-    data_type: Int
-    column_type: Random
-    min: 0
-    max: 10
-  - name: item_qty
+    max: 200
+  - name: quantity
     data_type: Int
     column_type: Random
     min: 0
     max: 10
-  - name: item_cost
+  - name: cost
     data_type: Float
     column_type: Random
     min: 1
     max: 5
     decimal_places: 2
-  - name: item_discount
+  - name: discount
     data_type: Float
     column_type: Random
     min: 1
     max: 2
     decimal_places: 2
-  - name: spend_amt
+  - name: spend
     column_type: Expression
-    expression: round((item_cost * item_discount) * item_qty, 2)
-  - name: date_id
+    expression: round((cost * discount) * quantity, 2)
+  - name: date
     data_type: Date
     column_type: Random
     min: 2017-01-01
     max: 2018-01-01
   partitions:
-    - date_id
-
-- name: card_dim_c_suppressions
-  rows: 10
-  columns:
-  - name: identifier
-    data_type: Int
-    column_type: Random
-    min: 0
-    max: 10 # number of cards generated
-  - name: identifier_type
-    data_type: String
-    column_type: Fixed
-    value: card_id
+    - date
 ```
 
-#### card_dim_c
+#### customers
 
-| card_id | card_code  | hshd_id | hshd_code  | prsn_id | prsn_code  | hshd_isba_market_code |
-|---------|------------|---------|------------|---------|------------|-----------------------|
-| 0       | 0000000000 | 9       | 0000000009 | 3       | 0000000003 | isba0000000009        |
-| 1       | 0000000001 | 8       | 0000000008 | 8       | 0000000008 | isba0000000008        |
-| 2       | 0000000002 | 4       | 0000000004 | 0       | 0000000000 | isba0000000004        |
+| customer_id | customer_code  |
+|-------------|----------------|
+| 0           | 0000000000     |
+| 1           | 0000000001     |
+| 2           | 0000000002     |
 
-#### transaction_item_fct_data
+#### products
 
+| product_id  | product_code   |
+|-------------|----------------|
+| 0           | 0000000000     |
+| 1           | 0000000001     |
+| 2           | 0000000002     |
 
-| card_id | prod_id |   store_id | item_qty | item_distcount_amt | spend_amt | date_id    | net_spend_amt |
-|---------|---------|------------|----------|--------------------|-----------|------------|---------------|
-| 0       | 25      | 4          | 1        | 2                  | 60        | 2018-06-03 | 58            |
-| 1       | 337     | 8          | 3        | 8                  | 47        | 2018-04-12 | 117           |
-| 2       | 550     | 2          | 6        | 0                  | 23        | 2018-07-09 | 138           |
+#### transactions 
 
-#### card_dim_c_suppressions
-
-| identifier | identifier_type |
-|------------|-----------------|
-| 0          | card_id         |
-| 10         | card_id         |
-| 34         | card_id         |
+| customer_id | product_id | quantity | cost     | discount | spend | date       |
+|-------------|------------|----------|----------|----------|-------|------------|
+| 0           | 25         | 1        | 1.53     | 1.2      | 1.83  | 2018-06-03 |
+| 1           | 337        | 3        | 0.34     | 1.64     | 1.22  | 2018-04-12 |
+| 2           | 550        | 6        | 4.84     | 1.03     | 29.91 | 2018-07-09 |
 
 ### Example:
 
 Call **datafaker** with **example.yaml**
 
-#### Execute against GCP:
-
-```
-gcloud dataproc jobs submit spark --cluster <dataproc clustername> --region <region> \
-  --jar <datafaker-jar> --files <data-spec-yaml> -- --database <database> --file <data-spec-yaml>
-```
-Example, submit the datafaker jar to GCP with a spec file `example.yaml`, both in the current directory:
-```
-gcloud dataproc jobs submit spark --cluster dh-data-dev --region europe-west1 \
-  --jar datafaker-assembly-0.1-SNAPSHOT.jar --files example.yaml -- --database dev_db --file example.yaml
-  ```
-#### Execute with docker:
-
-This can be deployed to with our [docker spark cluster](https://dhgitlab.dunnhumby.co.uk/core-data-engineering/docker-hadoop-spark-workbench).
-
-- Checkout Project
-- Deploy cluster with `docker compose -f compose-spark.yml up -d`
-- Submit Spark job
-  - with both the datafaker jar and `example.yaml` in the current directory, along with the `hadoop-hive.xml`
-
-
-```bash
-docker run --net docker-hadoop-spark-workbench_spark-net --name submit --rm \
-  -v $PWD:/app --env-file hadoop-hive.env bde2020/spark-worker:2.1.0-hadoop2.8-hive-java8 /spark/bin/spark-submit \
-  --files /app/example.yaml --master spark://spark-master:7077 /app/datafaker-assembly-0.1-SNAPSHOT.jar \
-  --database test --file /app/example.yaml
-```
-Note: 
-- **hadoop-hive.env** is located in the **docker-hadoop-spark-workbench** directory
-- Mount the directory containing the **example.yaml** and **datafaker.jar** to app
 
 
 #### Execute locally:
