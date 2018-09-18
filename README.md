@@ -1,4 +1,8 @@
-# A Scala Application for Generating Fake Datasets
+# data-faker
+
+[![Build Status](https://travis-ci.org/dunnhumby/data-faker.svg?branch=master)](https://travis-ci.org/dunnhumby/data-faker)
+
+**A Scala Application for Generating Fake Datasets with Spark**
 
 **The tool can generate any format given a provided schema, for example generate cards, transaction, and suppression data.**
 
